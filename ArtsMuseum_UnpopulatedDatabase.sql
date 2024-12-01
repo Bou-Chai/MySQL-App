@@ -47,8 +47,19 @@ CREATE TABLE PAINTING(
     foreign key (ArtID) references ART_OBJECTS(ArtID)
 );
 
-DROP TABLE IF EXISTS SCULPTURE_OR_STATUE;
-CREATE TABLE SCULPTURE_OR_STATUE(
+DROP TABLE IF EXISTS SCULPTURE;
+CREATE TABLE SCULPTURE(
+	ArtID					integer not null,
+    Material				varchar(30),
+    Height_Centimeters		float,
+    Weight_Kilograms		float,
+    Style					varchar(50),
+    primary key (ArtID),
+    foreign Key (ArtID) references ART_OBJECTS(ArtID)
+    );
+
+DROP TABLE IF EXISTS STATUE;
+CREATE TABLE STATUE(
 	ArtID					integer not null,
     Material				varchar(30),
     Height_Centimeters		float,
