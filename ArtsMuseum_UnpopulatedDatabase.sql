@@ -6,8 +6,8 @@ DROP TABLE IF EXISTS ARTIST;
 CREATE TABLE ARTIST(
 	AName					varchar(50) not null,
     Epoch					varchar(50),
-    Date_born				timestamp,
-    Date_died				timestamp,
+    Date_born				date,
+    Date_died				date,
     ADescription			varchar(300),
     Main_style				varchar(30),
     Origin_Country			varchar(30),
@@ -17,8 +17,8 @@ CREATE TABLE ARTIST(
 DROP TABLE IF EXISTS EXHIBITION;
 CREATE TABLE EXHIBITION(
 	EName					varchar(80) not null,
-    Start_date				timestamp,
-    End_date				timestamp,
+    Start_date				date,
+    End_date				date,
     primary key (EName)
     );
     
@@ -82,8 +82,8 @@ DROP TABLE IF EXISTS BORROWED;
 CREATE TABLE BORROWED(
 	ArtID					integer not null,
     Collection_name			varchar(50),
-    Date_borrowed			timestamp,
-    Date_returned			timestamp,
+    Date_borrowed			date,
+    Date_returned			date,
     primary key (ArtID),
     foreign key (ArtID) references ART_OBJECTS(ArtID),
     foreign key (Collection_name) references OTHER_COLLECTIONS(CName)
@@ -93,7 +93,7 @@ DROP TABLE IF EXISTS PERMANENT;
 CREATE TABLE PERMANENT(
 	ArtID					integer not null,
     Cost					decimal(15, 2),
-    Date_aquired			timestamp,
+    Date_aquired			date,
     Item_Status				varchar(30),
     primary key (ArtID),
     foreign key (ArtID) references ART_OBJECTS(ArtID)
