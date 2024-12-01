@@ -4,22 +4,22 @@ USE ARTSMUSEUM;
 
 DROP TABLE IF EXISTS ARTIST;
 CREATE TABLE ARTIST(
-	Aname					varchar(50) not null,
+	AName					varchar(50) not null,
     Epoch					varchar(50),
     Date_born				timestamp,
     Date_died				timestamp,
     ADescription			varchar(300),
     Main_style				varchar(30),
     Origin_Country			varchar(30),
-    primary key (Aname)
+    primary key (AName)
     );
     
 DROP TABLE IF EXISTS EXHIBITION;
 CREATE TABLE EXHIBITION(
-	Ename					varchar(80) not null,
+	EName					varchar(80) not null,
     Start_date				timestamp,
     End_date				timestamp,
-    primary key (Ename)
+    primary key (EName)
     );
     
 DROP TABLE IF EXISTS ART_OBJECTS;
