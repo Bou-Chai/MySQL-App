@@ -45,7 +45,7 @@ SELECT
 FROM
 	(ART_OBJECTS JOIN SCULPTURE ON ART_OBJECTS.ArtID = SCULPTURE.ArtID);
 
--- Query 5 (Extra for fun): Return all paintings with their names, dimensions, and artists
+-- Query 5 (Extra for fun): Return all paintings (That are drawn on oak or wood) with their names, dimensions, and artists
 SELECT
 	Title AS Painting_Name, 
     Paint_type,
