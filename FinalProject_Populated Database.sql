@@ -225,3 +225,28 @@ VALUES
 ('54.1.1a,b', 730000, '1934-05-24', 'On Display'),
 ('17.190.173a,b;1988.16', 230000, '1964-04-08', 'On Display'),
 ('46.156.72', 42000, '1907-09-12', 'On Display');
+
+-- Create roles and users
+DROP ROLE IF EXISTS db_admin@localhost, read_access@localhost, data_entry@localhost;
+
+CREATE ROLE db_admin@localhost, read_access@localhost, data_entry@localhost;
+
+GRANT ALL PRIVILEGES ON ARTSMUSEUM.* TO db_admin@localhost;
+GRANT Select ON ARTSMUSEUM.* TO read_access@localhost;
+GRANT SELECT, INSERT, DELETE, UPDATE ON ARTSMUSEUM.* TO data_entry@localhost;
+
+DROP USER IF EXISTS admin@localhost; 
+DROP USER IF EXISTS guest@localhost;
+DROP USER IF EXISTS de@localhost;
+
+CREATE USER admin@localhost IDENTIFIED BY "admin";
+CREATE USER guest@localhost;
+CREATE USER de@localhost IDENTIFIED BY "cleartext";
+
+GRANT db_admin@localhost TO admin@localhost;
+GRANT read_access@localhost TO guest@localhost;
+GRANT data_entry@localhost TO de@localhost;
+
+SET DEFAULT ROLE ALL TO admin@localhost;
+SET DEFAULT ROLE ALL TO guest@localhost;
+SET DEFAULT ROLE ALL TO de@localhost;
