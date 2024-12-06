@@ -23,6 +23,7 @@ def login(user, host, database):
         except mysql.connector.errors.ProgrammingError as error:
             print(error)
 
+
 def exec_query(cursor, query, tuple, field, search):
     try:
         cursor.execute(query)
@@ -35,6 +36,7 @@ def exec_query(cursor, query, tuple, field, search):
     except:
         print(f"No {tuple} found with {field} {search}")
 
+
 # Function to display query result
 def display_result(result):
     print("-----------------------------------------")
@@ -45,8 +47,14 @@ def display_result(result):
             print()
     print("-----------------------------------------")
 
+
 def execute_file(cursor, path):
-    file = open(path, "r")
+    try:
+        file = open(path, "r")
+    except:
+        print("Could not find file")
+        return(-1)
+
     sql_file = file.read()
     file.close()
     sql_commands = sql_file.split(";")
@@ -55,36 +63,239 @@ def execute_file(cursor, path):
         try:
             if command.strip() != "":
                 cursor.execute(command)
-        except IOError as msg:
+        except Exception as msg:
             print(f"Command skipped: {msg}")
+    
+    return 0
 
-def general_interface(cursor):
-    user_input = ""
 
+def get_table_fields(cursor, table):
+    query = f"SELECT * FROM {table} LIMIT 1;"
+    fields = []
+
+    try:
+        cursor.execute(query)
+        cursor.fetchall()
+        description = cursor.description
+
+        for desc in description:
+            fields.append(desc[0])
+
+        return fields
+
+    except Exception as e:
+        print(f"No table named {table}")
+        return None
+
+
+def modify_db(cursor):
     while True:
-        user_input = input("Enter sql (or q to quit): ")
-        try:
-            # Enter q to quit
-            if user_input == "q":
-                print(goodbye)
-                break
-            elif user_input == "":
-                continue
+        print("1. Insert")
+        print("2. Update")
+        print("3. Delete")
 
-            cursor.execute(user_input)
+        option = input()
+        if option == "1":
+            insert_db(cursor)
+        elif option == "2":
+            update_db(cursor)
+        elif option == "3":
+            delete_from_db(cursor)
+
+        elif option == "q":
+            return 0
         
-        # Print errors
-        except mysql.connector.Error as error:
-            print(error)
+def insert_db(cursor):
+    while True:
+        print("Enter the table you want to insert data into: ")
+
+        table = input()
+        if table == "q":
+            return 0
+        
+        query = f"SELECT * FROM {table} LIMIT 1;"
+
+        field_list = get_table_fields(cursor, table)
+        if field_list == None:
+            continue
+        
+        fields = "("
+        field_values = "("
+        for i in range(0, len(field_list) - 1):
+            print(f"Enter {field_list[i]}: ")
+            field_val = input()
+            fields += field_list[i] + ", "
+            field_values += "'" + field_val + "'" + ", "
+        
+        print(f"Enter {field_list[i + 1]}: ")
+        field_val = input()
+
+        fields += field_list[i + 1] + ")"
+        field_values += "'" + field_val + "'" + ")"
+
+        query = f"INSERT INTO {table} {fields} VALUES {field_values};"
+        try:
+            cursor.execute(query)
+            cursor._connection.commit()
+            
+        except Exception as error:
+            print("\nCannot insert:")
+            print(error, "\n")
+            continue
+        
+        print("Inserted successfully\n")
+
+
+def update_db(cursor):
+    while True:
+        print("Enter the table you want to update: ")
+        table = input()
+        if table == "q":
+            return 0
+
+        field_list = get_table_fields(cursor, table)
+        if field_list == None:
+            continue
+            
+        print("\nTable fields:")
+        print("|", end="")
+        for field in field_list:
+            print(field + "|", end="")
+
+        try:
+            print("\n")
+            print("Enter a field name followed by = followed by your chosen value to specify what enrties to modify:")
+            select_expression = input()
+            # Make user entered value into a string
+            split = select_expression.split("=")
+            select_expression = split[0] + "=" + "'" + split[1].strip() + "'"
+            
+            print("Enter a field name followed by = followed by your chosen value to update the field:")
+            set_expression = input()
+            # Make user entered value into a string
+            split = set_expression.split("=")
+            set_expression = split[0] + "=" + "'" + split[1].strip() + "'"
+        except:
+            print("Invalid input")
             continue
 
-        # Commit if database is changed
-        if "delete" in user_input.lower() or "update" in user_input.lower() or "insert" in user_input.lower():
-            connection.commit()
+        query = f"UPDATE {table} SET {set_expression} WHERE {select_expression}"
+        try:
+            cursor.execute(query)
+            cursor.fetchall()
+            if cursor.rowcount == 0:
+                print("Did not update")
+                continue
+            cursor._connection.commit()
+            
+        except Exception as error:
+            print("\nCannot update:")
+            print(error, "\n")
+            continue
+        
+        print("Updated successfully\n")
 
-        # Display query reslut
-        for tuple in cursor:
-            print(tuple)
+def delete_from_db(cursor):
+    while True:
+        print("Enter the table you want to delete from:")
+        table = input()
+        if table == "q":
+            return 0
+
+        field_list = get_table_fields(cursor, table)
+        if field_list == None:
+            continue
+            
+        print("\nTable fields:")
+        print("|", end="")
+        for field in field_list:
+            print(field + "|", end="")
+
+        try:
+            print("\n")
+            print("Enter a field name followed by = followed by your chosen value to specify what enrties to delete:")
+            select_expression = input()
+            # Make user entered value into a string
+            split = select_expression.split("=")
+            select_expression = split[0] + "=" + "'" + split[1].strip() + "'"
+        except:
+            print("Invalid input")
+            continue
+
+        query = f"DELETE FROM {table} WHERE {select_expression}"
+        try:
+            cursor.execute(query)
+            cursor.fetchall()
+            if cursor.rowcount == 0:
+                print("Did not delete")
+                continue
+            cursor._connection.commit()
+            
+        except Exception as error:
+            print("\nCannot delete:")
+            print(error, "\n")
+            continue
+        
+        print("Deleted successfully\n")
+
+
+def admin_interface(cursor):
+    while True:
+        # Ask user to enter commands or a file
+        print("1. Enter sql commands")
+        print("2. Enter a path to an sql file to execute")
+
+        user_input = input()
+        if user_input == "1":
+            while True:
+                print("Enter sql:")
+                user_input = input()
+    
+                # Enter q to quit
+                if user_input == "q":
+                    break
+                elif user_input == "":
+                    continue
+
+                try:
+                    cursor.execute(user_input)
+            
+                # Print errors
+                except mysql.connector.Error as error:
+                    print(error)
+                    continue
+
+                # Commit if database is changed
+                if "delete" in user_input.lower() or "update" in user_input.lower() or "insert" in user_input.lower():
+                    cursor._connection.commit()
+
+                # Display query result
+                for tuple in cursor:
+                    print(tuple)
+
+        elif user_input == "2":
+            path = input("Enter file path: ")
+            if path == "q":
+                continue
+            execute_file(cursor, path)
+        
+        elif user_input == "q":
+            return 0
+
+
+def de_interface(cursor):
+    while True:
+        print("1. Search database")
+        print("2. Modify database")
+
+        option = input()
+        if option == "1":
+            guest_interface(cursor)
+        elif option == "2":
+            modify_db(cursor)
+
+        elif option == "q":
+            return 0
 
 def guest_interface(cursor):
     while True:
@@ -98,9 +309,9 @@ def guest_interface(cursor):
         if option == "1":
             search_art_objects(cursor)
         elif option == "2":
-            search_artists()
+            search_artists(cursor)
         elif option == "3":
-            search_exhibitions()
+            search_exhibitions(cursor)
         elif option == "q":
             return 0
         else:
@@ -115,17 +326,17 @@ def search_art_objects(cursor):
 
         option = input()
         if option == "1":
-            perm = True
+            permanent = True
         elif option == "2":
-            perm = False
-        elif option == "b":
+            permanent = False
+        elif option == "q":
             return 0
         else:
             print(invalid_input)
 
-        search_art_type(cursor, perm)
+        search_art_type(cursor, permanent)
 
-def search_art_type(cursor, perm):
+def search_art_type(cursor, permanent):
     while True:
         print("What are you looking for?")
         print("1. Paintings")
@@ -134,7 +345,7 @@ def search_art_type(cursor, perm):
         print("4. Other")
         print("(Enter b to go back a menu)")
 
-        if perm:
+        if permanent:
             ownership = "PERMANENT"
         else:
             ownership = "BORROWED"
@@ -148,71 +359,56 @@ def search_art_type(cursor, perm):
             type = "STATUE"
         elif option == "4":
             type = "OTHER"
-        elif option == "b":
+        elif option == "q":
             return 0
         else:
             print(invalid_input)
             continue
-
+        
+        # Prompt user
         print(f"Enter the art ID of the {type.lower()} you're looking for:")
         search = input()
-        #query = f"SELECT * FROM (ART_OBJECTS AS A JOIN {ownership} AS PB ON A.ArtID=PB.ArtID) JOIN {type} as T ON T.ArtID=PB.ArtID WHERE T.ArtID='{search}'"
 
+        # Craft query and execute
+        query = f"SELECT * FROM (ART_OBJECTS AS A JOIN {ownership} AS PB ON A.ArtID=PB.ArtID) JOIN {type} as T ON T.ArtID=PB.ArtID WHERE T.ArtID='{search}';"
         exec_query(cursor, query, type.lower(), "id", search)
-        try:
-            cursor.execute(query)
-            result = cursor.fetchall()
-
-            if result:
-                display_result()
-            else:
-                print(f"No {type.lower()} found with id {search}")
-        except:
-            print(f"No {type.lower()} found with id {search}")
 
 def search_artists(cursor):
     while True:
         print("Enter artist name: ")
         name = input()
 
-        query = f"SELECT * FROM ARTIST WHERE AName={name}"
+        if name == "q":
+            return 0
 
-        try:
-            cursor.execute(query)
-            result = cursor.fetchall()
+        query = f"SELECT * FROM ARTIST WHERE AName='{name}';"
+        exec_query(cursor, query, "artist", "name", name)
 
-            if result:
-                display_result()
-            else:
-                print(f"No artist found with name {name}")
-        except:
-            print(f"No artist found with name {name}")
+def search_exhibitions(cursor):
+    while True:
+        print("Enter exhibition start date: ")
+        date = input()
 
+        if date == "q":
+            return 0
 
-def search_exhibitions():
-    pass
-
-
+        query = f"SELECT * FROM EXHIBITION WHERE Start_date='{date}';"
+        exec_query(cursor, query, "exhibition", "start date", date)
 
 while True:
     # Prompt user for login
-    print("Login as one of the following users (enter 1, 2, or 3 or q to quit)")
+    print("Welome to DDA (Dumb Database Application)")
+    print("Note: Throughout most of the application enter 'q' to go back a menu or quit")
+    print("Login as one of the following users (enter 1, 2, or 3)")
     option = input("1. Admin\n2. Data Entry\n3. Guest\n")
 
     if option == "1":
         cursor, connection = login("admin", host, database)
-
-        # Ask user to enter commands or a file
-        user_input = input("\n1. Enter sql commands\n2. Enter a path to an sql file to execute")
-        if user_input == "1":
-            general_interface(cursor)
-        elif user_input == "2":
-            path = input("Enter file path: ")
-            execute_file(cursor, path)
+        admin_interface(cursor)
 
     elif option == "2": 
         cursor, connection = login("de", host, database)
-        general_interface(cursor)
+        de_interface(cursor)
 
     elif option == "3": 
         connection = mysql.connector.connect(user='guest', password='', host=host, database=database)
