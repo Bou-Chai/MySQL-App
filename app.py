@@ -1,6 +1,6 @@
 # ENGG 300
 # Date created: December 2, 2024
-# Date last modified: December 3, 2024
+# Date last modified: December 9, 2024
 # Group 5 (Ali Chaudhary, Ali Awan, Tyseer Ammar Shahriar, Joe Biden)
 
 import mysql.connector
@@ -27,10 +27,9 @@ def login(user, host, database):
 def exec_query(cursor, query, tuple, field, search):
     try:
         cursor.execute(query)
-        result = cursor.fetchall()
 
-        if result:
-            display_result(result)
+        if cursor:
+            display_result(cursor)
         else:
             print(f"No {tuple} found with {field} {search}")
     except:
@@ -38,9 +37,9 @@ def exec_query(cursor, query, tuple, field, search):
 
 
 # Function to display query result
-def display_result(result):
+def display_result(cursor):
     print("-----------------------------------------")
-    for tuple in result:
+    for tuple in cursor:
         for field, desc in zip(tuple, cursor.description):
             print(f"{desc[0]}:")
             print(field)
@@ -303,7 +302,6 @@ def guest_interface(cursor):
         print("1. Art objects")
         print("2. Artists")
         print("3. Exhibitions")
-        print("(Enter q to quit)")
 
         option = input()
         if option == "1":
@@ -322,7 +320,6 @@ def search_art_objects(cursor):
         print("What are you looking for?")
         print("1. Permanent art objects")
         print("2. Borrowed art objects")
-        print("(Enter b to go back a menu)")
 
         option = input()
         if option == "1":
@@ -343,7 +340,6 @@ def search_art_type(cursor, permanent):
         print("2. Sculptures")
         print("3. Statues")
         print("4. Other")
-        print("(Enter b to go back a menu)")
 
         if permanent:
             ownership = "PERMANENT"
@@ -395,32 +391,36 @@ def search_exhibitions(cursor):
         query = f"SELECT * FROM EXHIBITION WHERE Start_date='{date}';"
         exec_query(cursor, query, "exhibition", "start date", date)
 
-while True:
-    # Prompt user for login
-    print("Welome to DDA (Dumb Database Application)")
-    print("Note: Throughout most of the application enter 'q' to go back a menu or quit")
-    print("Login as one of the following users (enter 1, 2, or 3)")
-    option = input("1. Admin\n2. Data Entry\n3. Guest\n")
+def main():
+    while True:
+        # Prompt user for login
+        print("Welome to DDA (Dumb Database Application)")
+        print("Note: Throughout most of the application enter 'q' to go back a menu or quit")
+        print("Login as one of the following users (enter 1, 2, or 3)")
+        option = input("1. Admin\n2. Data Entry\n3. Guest\n")
 
-    if option == "1":
-        cursor, connection = login("admin", host, database)
-        admin_interface(cursor)
+        if option == "1":
+            cursor, connection = login("admin", host, database)
+            admin_interface(cursor)
 
-    elif option == "2": 
-        cursor, connection = login("de", host, database)
-        de_interface(cursor)
+        elif option == "2": 
+            cursor, connection = login("de", host, database)
+            de_interface(cursor)
 
-    elif option == "3": 
-        connection = mysql.connector.connect(user='guest', password='', host=host, database=database)
-        cursor = connection.cursor()
-        guest_interface(cursor)
+        elif option == "3": 
+            connection = mysql.connector.connect(user='guest', password='', host=host, database=database)
+            cursor = connection.cursor()
+            guest_interface(cursor)
 
-    elif option == "q":
-        print(goodbye)
-        break
+        elif option == "q":
+            print(goodbye)
+            break
 
-    else:
-        print(invalid_input)
+        else:
+            print(invalid_input)
 
-if connection != None:
-    connection.close()
+    if connection != None:
+        connection.close()
+
+if __name__ == "__main__":
+    main()
